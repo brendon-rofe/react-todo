@@ -13,7 +13,7 @@ function App() {
     <ChakraProvider theme={theme}>
       <Box bg="gray.900" color="white" minH="100vh" py={10}>
         <Container>
-          <Heading>Hello world</Heading>
+          <Heading>React Todo</Heading>
         </Container>
       </Box>
     </ChakraProvider>   
