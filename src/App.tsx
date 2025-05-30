@@ -1,12 +1,21 @@
-import { ChakraProvider } from "@chakra-ui/react";
-import { defaultSystem } from "@chakra-ui/react"
+import { ChakraProvider, extendTheme, Container, Heading, Box, type ThemeConfig } from "@chakra-ui/react";
 
+const config: ThemeConfig = {
+  initialColorMode: "dark",
+  useSystemColorMode: false,
+}
+
+const theme = extendTheme({ config })
 
 function App() {
 
   return (
-    <ChakraProvider value={defaultSystem}>
-      <h1>Hello world</h1>
+    <ChakraProvider theme={theme}>
+      <Box bg="gray.900" color="white" minH="100vh" py={10}>
+        <Container>
+          <Heading>Hello world</Heading>
+        </Container>
+      </Box>
     </ChakraProvider>   
   )
 
