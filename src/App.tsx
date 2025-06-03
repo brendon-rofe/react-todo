@@ -14,7 +14,7 @@ import {
   Text,
   IconButton,
 } from "@chakra-ui/react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { CloseIcon } from "@chakra-ui/icons"
 
 const config: ThemeConfig = {
@@ -25,7 +25,10 @@ const config: ThemeConfig = {
 const theme = extendTheme({ config })
 
 function App() {
-  const [todos, setTodos] = useState<string[]>([])
+  const [todos, setTodos] = useState<string[]>(() => {
+    const stored = localStorage.getItem("todos")
+    return stored ? JSON.parse(stored) : []
+  })
   const [input, setInput] = useState("")
 
   const addTodo = () => {
@@ -37,6 +40,10 @@ function App() {
   const removeTodo = (index: number) => {
     setTodos(todos.filter((_, i) => i !== index))
   }
+
+  useEffect(() => {
+    localStorage.setItem("todos", JSON.stringify(todos))
+  }, [todos])
 
   return (
     <ChakraProvider theme={theme}>
