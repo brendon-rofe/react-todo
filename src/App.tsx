@@ -13,37 +13,50 @@ import {
   HStack,
   Text,
   IconButton,
-} from "@chakra-ui/react"
-import { useState, useEffect } from "react"
-import { CloseIcon } from "@chakra-ui/icons"
+} from "@chakra-ui/react";
+import { useState, useEffect } from "react";
+import { CloseIcon } from "@chakra-ui/icons";
 
 const config: ThemeConfig = {
   initialColorMode: "dark",
   useSystemColorMode: false,
-}
+};
 
-const theme = extendTheme({ config })
+const theme = extendTheme({ config });
+
+type Todo = {
+  text: string;
+  done: boolean;
+};
 
 function App() {
-  const [todos, setTodos] = useState<string[]>(() => {
-    const stored = localStorage.getItem("todos")
-    return stored ? JSON.parse(stored) : []
-  })
-  const [input, setInput] = useState("")
+  const [todos, setTodos] = useState<Todo[]>(() => {
+    const stored = localStorage.getItem("todos");
+    return stored ? JSON.parse(stored) : [];
+  });
+  const [input, setInput] = useState("");
 
   const addTodo = () => {
-    if (!input.trim()) return
-    setTodos([...todos, input])
-    setInput("")
-  }
+    if (!input.trim()) return;
+    setTodos([...todos, { text: input, done: false }]);
+    setInput("");
+  };
 
   const removeTodo = (index: number) => {
-    setTodos(todos.filter((_, i) => i !== index))
-  }
+    setTodos(todos.filter((_, i) => i !== index));
+  };
+
+  const toggleTodo = (index: number) => {
+    setTodos(
+      todos.map((todo, i) =>
+        i === index ? { ...todo, done: !todo.done } : todo
+      )
+    );
+  };
 
   useEffect(() => {
-    localStorage.setItem("todos", JSON.stringify(todos))
-  }, [todos])
+    localStorage.setItem("todos", JSON.stringify(todos));
+  }, [todos]);
 
   return (
     <ChakraProvider theme={theme}>
@@ -67,8 +80,22 @@ function App() {
 
           <VStack align="stretch" spacing={3}>
             {todos.map((todo, i) => (
-              <HStack key={i} justify="space-between" p={3} bg="gray.700" borderRadius="md">
-                <Text>{todo}</Text>
+              <HStack
+                key={i}
+                justify="space-between"
+                p={3}
+                bg={todo.done ? "green.700" : "gray.700"}
+                borderRadius="md"
+              >
+                <HStack spacing={3}>
+                  <input
+                    type="checkbox"
+                    checked={todo.done}
+                    onChange={() => toggleTodo(i)}
+                    style={{ transform: "scale(1.5)" }}
+                  />
+                  <Text as={todo.done ? "s" : undefined}>{todo.text}</Text>
+                </HStack>
                 <IconButton
                   aria-label="Delete todo"
                   icon={<CloseIcon />}
@@ -81,7 +108,7 @@ function App() {
         </Container>
       </Box>
     </ChakraProvider>
-  )
+  );
 }
 
-export default App
+export default App;
