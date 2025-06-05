@@ -30,6 +30,37 @@ type Todo = {
 };
 
 function App() {
+  function TodoItem({ todo, index }: { todo: Todo; index: number }) {
+    return (
+      <HStack
+        justify="space-between"
+        p={3}
+        bg={todo.done ? "green.700" : "gray.700"}
+        borderRadius="md"
+      >
+        <HStack spacing={3}>
+          <input
+            type="checkbox"
+            checked={todo.done}
+            onChange={() =>
+              setTodos((prev) =>
+                prev.map((t, i) => (i === index ? { ...t, done: !t.done } : t))
+              )
+            }
+            style={{ transform: "scale(1.5)" }}
+          />
+          <Text as={todo.done ? "s" : undefined}>{todo.text}</Text>
+        </HStack>
+        <IconButton
+          aria-label="Delete todo"
+          icon={<CloseIcon />}
+          size="sm"
+          onClick={() => setTodos((prev) => prev.filter((_, i) => i !== index))}
+        />
+      </HStack>
+    );
+  }
+
   const [todos, setTodos] = useState<Todo[]>(() => {
     const stored = localStorage.getItem("todos");
     return stored ? JSON.parse(stored) : [];
@@ -42,21 +73,12 @@ function App() {
     setInput("");
   };
 
-  const removeTodo = (index: number) => {
-    setTodos(todos.filter((_, i) => i !== index));
-  };
-
-  const toggleTodo = (index: number) => {
-    setTodos(
-      todos.map((todo, i) =>
-        i === index ? { ...todo, done: !todo.done } : todo
-      )
-    );
-  };
-
   useEffect(() => {
     localStorage.setItem("todos", JSON.stringify(todos));
   }, [todos]);
+
+  const activeTodos = todos.filter((t) => !t.done);
+  const completedTodos = todos.filter((t) => t.done);
 
   return (
     <ChakraProvider theme={theme}>
@@ -79,31 +101,35 @@ function App() {
           </FormControl>
 
           <VStack align="stretch" spacing={3}>
-            {todos.map((todo, i) => (
-              <HStack
-                key={i}
-                justify="space-between"
-                p={3}
-                bg={todo.done ? "green.700" : "gray.700"}
-                borderRadius="md"
-              >
-                <HStack spacing={3}>
-                  <input
-                    type="checkbox"
-                    checked={todo.done}
-                    onChange={() => toggleTodo(i)}
-                    style={{ transform: "scale(1.5)" }}
+            {activeTodos.length > 0 && (
+              <>
+                <Heading size="md" mb={2}>
+                  Active
+                </Heading>
+                {activeTodos.map((todo, i) => (
+                  <TodoItem
+                    key={`active-${i}`}
+                    todo={todo}
+                    index={todos.indexOf(todo)}
                   />
-                  <Text as={todo.done ? "s" : undefined}>{todo.text}</Text>
-                </HStack>
-                <IconButton
-                  aria-label="Delete todo"
-                  icon={<CloseIcon />}
-                  size="sm"
-                  onClick={() => removeTodo(i)}
-                />
-              </HStack>
-            ))}
+                ))}
+              </>
+            )}
+
+            {completedTodos.length > 0 && (
+              <>
+                <Heading size="md" mt={6} mb={2}>
+                  Completed
+                </Heading>
+                {completedTodos.map((todo, i) => (
+                  <TodoItem
+                    key={`done-${i}`}
+                    todo={todo}
+                    index={todos.indexOf(todo)}
+                  />
+                ))}
+              </>
+            )}
           </VStack>
         </Container>
       </Box>
