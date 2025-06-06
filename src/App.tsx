@@ -30,37 +30,6 @@ type Todo = {
 };
 
 function App() {
-  function TodoItem({ todo, index }: { todo: Todo; index: number }) {
-    return (
-      <HStack
-        justify="space-between"
-        p={3}
-        bg={todo.done ? "green.700" : "gray.700"}
-        borderRadius="md"
-      >
-        <HStack spacing={3}>
-          <input
-            type="checkbox"
-            checked={todo.done}
-            onChange={() =>
-              setTodos((prev) =>
-                prev.map((t, i) => (i === index ? { ...t, done: !t.done } : t))
-              )
-            }
-            style={{ transform: "scale(1.5)" }}
-          />
-          <Text as={todo.done ? "s" : undefined}>{todo.text}</Text>
-        </HStack>
-        <IconButton
-          aria-label="Delete todo"
-          icon={<CloseIcon />}
-          size="sm"
-          onClick={() => setTodos((prev) => prev.filter((_, i) => i !== index))}
-        />
-      </HStack>
-    );
-  }
-
   const [todos, setTodos] = useState<Todo[]>(() => {
     const stored = localStorage.getItem("todos");
     return stored ? JSON.parse(stored) : [];
@@ -73,12 +42,114 @@ function App() {
     setInput("");
   };
 
+  const removeTodo = (index: number) => {
+    setTodos((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const toggleTodo = (index: number) => {
+    setTodos((prev) =>
+      prev.map((t, i) => (i === index ? { ...t, done: !t.done } : t))
+    );
+  };
+
+  const updateTodoText = (index: number, newText: string) => {
+    setTodos((prev) =>
+      prev.map((t, i) => (i === index ? { ...t, text: newText } : t))
+    );
+  };
+
   useEffect(() => {
     localStorage.setItem("todos", JSON.stringify(todos));
   }, [todos]);
 
   const activeTodos = todos.filter((t) => !t.done);
   const completedTodos = todos.filter((t) => t.done);
+
+  function TodoItem({
+    todo,
+    index,
+    toggleTodo,
+    removeTodo,
+    updateTodoText,
+  }: {
+    todo: Todo;
+    index: number;
+    toggleTodo: (index: number) => void;
+    removeTodo: (index: number) => void;
+    updateTodoText: (index: number, newText: string) => void;
+  }) {
+    const [isEditing, setIsEditing] = useState(false);
+    const [tempText, setTempText] = useState(todo.text);
+
+    const handleSave = () => {
+      if (tempText.trim()) {
+        updateTodoText(index, tempText);
+        setIsEditing(false);
+      }
+    };
+
+    return (
+      <HStack
+        justify="space-between"
+        p={3}
+        bg={todo.done ? "green.700" : "gray.700"}
+        borderRadius="md"
+      >
+        <HStack spacing={3}>
+          <input
+            type="checkbox"
+            checked={todo.done}
+            onChange={() => toggleTodo(index)}
+            style={{ transform: "scale(1.5)" }}
+          />
+
+          {isEditing ? (
+            <Input
+              size="sm"
+              value={tempText}
+              onChange={(e) => setTempText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleSave();
+                if (e.key === "Escape") setIsEditing(false);
+              }}
+            />
+          ) : (
+            <Text
+              as={todo.done ? "s" : undefined}
+              onDoubleClick={() => setIsEditing(true)}
+              cursor="pointer"
+            >
+              {todo.text}
+            </Text>
+          )}
+        </HStack>
+
+        <HStack spacing={2}>
+          {isEditing ? (
+            <>
+              <Button size="sm" colorScheme="teal" onClick={handleSave}>
+                Save
+              </Button>
+              <Button size="sm" onClick={() => setIsEditing(false)}>
+                Cancel
+              </Button>
+            </>
+          ) : (
+            <Button size="sm" onClick={() => setIsEditing(true)}>
+              Edit
+            </Button>
+          )}
+
+          <IconButton
+            aria-label="Delete todo"
+            icon={<CloseIcon />}
+            size="sm"
+            onClick={() => removeTodo(index)}
+          />
+        </HStack>
+      </HStack>
+    );
+  }
 
   return (
     <ChakraProvider theme={theme}>
@@ -111,6 +182,9 @@ function App() {
                     key={`active-${i}`}
                     todo={todo}
                     index={todos.indexOf(todo)}
+                    toggleTodo={toggleTodo}
+                    removeTodo={removeTodo}
+                    updateTodoText={updateTodoText}
                   />
                 ))}
               </>
@@ -126,6 +200,9 @@ function App() {
                     key={`done-${i}`}
                     todo={todo}
                     index={todos.indexOf(todo)}
+                    toggleTodo={toggleTodo}
+                    removeTodo={removeTodo}
+                    updateTodoText={updateTodoText}
                   />
                 ))}
               </>
