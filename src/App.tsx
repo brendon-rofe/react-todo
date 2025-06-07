@@ -196,7 +196,7 @@ function App() {
 
         <Modal isOpen={isOpen} onClose={onClose} isCentered>
           <ModalOverlay />
-          <ModalContent>
+          <ModalContent bg="gray.800" color="white">
             <ModalHeader>Edit Todo</ModalHeader>
             <ModalCloseButton />
             <ModalBody>
