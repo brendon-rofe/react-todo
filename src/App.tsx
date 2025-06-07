@@ -13,6 +13,14 @@ import {
   HStack,
   Text,
   IconButton,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
+  useDisclosure,
 } from "@chakra-ui/react";
 import { useState, useEffect } from "react";
 import { CloseIcon } from "@chakra-ui/icons";
@@ -35,6 +43,10 @@ function App() {
     return stored ? JSON.parse(stored) : [];
   });
   const [input, setInput] = useState("");
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [editText, setEditText] = useState("");
+
+  const { isOpen, onOpen, onClose } = useDisclosure();
 
   const addTodo = () => {
     if (!input.trim()) return;
@@ -52,10 +64,23 @@ function App() {
     );
   };
 
-  const updateTodoText = (index: number, newText: string) => {
-    setTodos((prev) =>
-      prev.map((t, i) => (i === index ? { ...t, text: newText } : t))
-    );
+  const updateTodoText = () => {
+    if (editingIndex !== null && editText.trim()) {
+      setTodos((prev) =>
+        prev.map((t, i) =>
+          i === editingIndex ? { ...t, text: editText } : t
+        )
+      );
+    }
+    onClose();
+    setEditingIndex(null);
+    setEditText("");
+  };
+
+  const startEditing = (index: number) => {
+    setEditingIndex(index);
+    setEditText(todos[index].text);
+    onOpen();
   };
 
   useEffect(() => {
@@ -70,24 +95,14 @@ function App() {
     index,
     toggleTodo,
     removeTodo,
-    updateTodoText,
+    startEditing,
   }: {
     todo: Todo;
     index: number;
     toggleTodo: (index: number) => void;
     removeTodo: (index: number) => void;
-    updateTodoText: (index: number, newText: string) => void;
+    startEditing: (index: number) => void;
   }) {
-    const [isEditing, setIsEditing] = useState(false);
-    const [tempText, setTempText] = useState(todo.text);
-
-    const handleSave = () => {
-      if (tempText.trim()) {
-        updateTodoText(index, tempText);
-        setIsEditing(false);
-      }
-    };
-
     return (
       <HStack
         justify="space-between"
@@ -102,44 +117,13 @@ function App() {
             onChange={() => toggleTodo(index)}
             style={{ transform: "scale(1.5)" }}
           />
-
-          {isEditing ? (
-            <Input
-              size="sm"
-              value={tempText}
-              onChange={(e) => setTempText(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleSave();
-                if (e.key === "Escape") setIsEditing(false);
-              }}
-            />
-          ) : (
-            <Text
-              as={todo.done ? "s" : undefined}
-              onDoubleClick={() => setIsEditing(true)}
-              cursor="pointer"
-            >
-              {todo.text}
-            </Text>
-          )}
+          <Text as={todo.done ? "s" : undefined}>{todo.text}</Text>
         </HStack>
 
         <HStack spacing={2}>
-          {isEditing ? (
-            <>
-              <Button size="sm" colorScheme="teal" onClick={handleSave}>
-                Save
-              </Button>
-              <Button size="sm" onClick={() => setIsEditing(false)}>
-                Cancel
-              </Button>
-            </>
-          ) : (
-            <Button size="sm" onClick={() => setIsEditing(true)}>
-              Edit
-            </Button>
-          )}
-
+          <Button size="sm" onClick={() => startEditing(index)}>
+            Edit
+          </Button>
           <IconButton
             aria-label="Delete todo"
             icon={<CloseIcon />}
@@ -184,7 +168,7 @@ function App() {
                     index={todos.indexOf(todo)}
                     toggleTodo={toggleTodo}
                     removeTodo={removeTodo}
-                    updateTodoText={updateTodoText}
+                    startEditing={startEditing}
                   />
                 ))}
               </>
@@ -202,13 +186,39 @@ function App() {
                     index={todos.indexOf(todo)}
                     toggleTodo={toggleTodo}
                     removeTodo={removeTodo}
-                    updateTodoText={updateTodoText}
+                    startEditing={startEditing}
                   />
                 ))}
               </>
             )}
           </VStack>
         </Container>
+
+        <Modal isOpen={isOpen} onClose={onClose} isCentered>
+          <ModalOverlay />
+          <ModalContent bg="gray.800" color="white">
+            <ModalHeader>Edit Todo</ModalHeader>
+            <ModalCloseButton />
+            <ModalBody>
+              <Input
+                value={editText}
+                onChange={(e) => setEditText(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") updateTodoText();
+                  if (e.key === "Escape") onClose();
+                }}
+              />
+            </ModalBody>
+            <ModalFooter>
+              <Button colorScheme="teal" mr={3} onClick={updateTodoText}>
+                Save
+              </Button>
+              <Button variant="ghost" onClick={onClose}>
+                Cancel
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
       </Box>
     </ChakraProvider>
   );
