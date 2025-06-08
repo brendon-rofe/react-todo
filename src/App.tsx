@@ -16,11 +16,9 @@ import {
   Modal,
   ModalOverlay,
   ModalContent,
-  ModalHeader,
-  ModalFooter,
   ModalBody,
-  ModalCloseButton,
   useDisclosure,
+  Spacer,
 } from "@chakra-ui/react";
 import { useState, useEffect } from "react";
 import { CloseIcon } from "@chakra-ui/icons";
@@ -67,9 +65,7 @@ function App() {
   const updateTodoText = () => {
     if (editingIndex !== null && editText.trim()) {
       setTodos((prev) =>
-        prev.map((t, i) =>
-          i === editingIndex ? { ...t, text: editText } : t
-        )
+        prev.map((t, i) => (i === editingIndex ? { ...t, text: editText } : t))
       );
     }
     onClose();
@@ -196,27 +192,48 @@ function App() {
 
         <Modal isOpen={isOpen} onClose={onClose} isCentered>
           <ModalOverlay />
-          <ModalContent bg="gray.800" color="white">
-            <ModalHeader>Edit Todo</ModalHeader>
-            <ModalCloseButton />
+          <ModalContent bg="gray.800" color="white" p={4}>
             <ModalBody>
-              <Input
-                value={editText}
-                onChange={(e) => setEditText(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") updateTodoText();
-                  if (e.key === "Escape") onClose();
-                }}
-              />
+              <VStack align="stretch" spacing={4}>
+                {/* Custom header row */}
+                <HStack>
+                  <Text fontSize="lg" fontWeight="bold">
+                    Edit Todo
+                  </Text>
+                  <Spacer />
+                  <IconButton
+                    aria-label="Close modal"
+                    icon={<CloseIcon />}
+                    size="sm"
+                    variant="ghost"
+                    color="white"
+                    _hover={{ bg: "gray.700" }}
+                    onClick={onClose}
+                  />
+                </HStack>
+                <HStack>
+                  <Input
+                    value={editText}
+                    onChange={(e) => setEditText(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") updateTodoText();
+                      if (e.key === "Escape") onClose();
+                    }}
+                  />
+                  <Button colorScheme="teal" onClick={updateTodoText}>
+                    Save
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    color="white"
+                    _hover={{ bg: "gray.700" }}
+                    onClick={onClose}
+                  >
+                    Cancel
+                  </Button>
+                </HStack>
+              </VStack>
             </ModalBody>
-            <ModalFooter>
-              <Button colorScheme="teal" mr={3} onClick={updateTodoText}>
-                Save
-              </Button>
-              <Button variant="ghost" onClick={onClose}>
-                Cancel
-              </Button>
-            </ModalFooter>
           </ModalContent>
         </Modal>
       </Box>
