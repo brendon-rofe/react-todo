@@ -19,6 +19,7 @@ import {
   ModalBody,
   useDisclosure,
   Spacer,
+  Badge,
 } from "@chakra-ui/react";
 import { useState, useEffect } from "react";
 import { CloseIcon } from "@chakra-ui/icons";
@@ -33,6 +34,7 @@ const theme = extendTheme({ config });
 type Todo = {
   text: string;
   done: boolean;
+  dueDate?: string; // ISO date string
 };
 
 function App() {
@@ -41,15 +43,18 @@ function App() {
     return stored ? JSON.parse(stored) : [];
   });
   const [input, setInput] = useState("");
+  const [dueDate, setDueDate] = useState("");
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editText, setEditText] = useState("");
+  const [editDueDate, setEditDueDate] = useState("");
 
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   const addTodo = () => {
     if (!input.trim()) return;
-    setTodos([...todos, { text: input, done: false }]);
+    setTodos([...todos, { text: input, done: false, dueDate }]);
     setInput("");
+    setDueDate("");
   };
 
   const removeTodo = (index: number) => {
@@ -65,17 +70,21 @@ function App() {
   const updateTodoText = () => {
     if (editingIndex !== null && editText.trim()) {
       setTodos((prev) =>
-        prev.map((t, i) => (i === editingIndex ? { ...t, text: editText } : t))
+        prev.map((t, i) =>
+          i === editingIndex ? { ...t, text: editText, dueDate: editDueDate } : t
+        )
       );
     }
     onClose();
     setEditingIndex(null);
     setEditText("");
+    setEditDueDate("");
   };
 
   const startEditing = (index: number) => {
     setEditingIndex(index);
     setEditText(todos[index].text);
+    setEditDueDate(todos[index].dueDate || "");
     onOpen();
   };
 
@@ -99,6 +108,9 @@ function App() {
     removeTodo: (index: number) => void;
     startEditing: (index: number) => void;
   }) {
+    const isOverdue =
+      todo.dueDate && !todo.done && new Date(todo.dueDate) < new Date();
+
     return (
       <HStack
         justify="space-between"
@@ -106,15 +118,29 @@ function App() {
         bg={todo.done ? "green.700" : "gray.700"}
         borderRadius="md"
       >
-        <HStack spacing={3}>
-          <input
-            type="checkbox"
-            checked={todo.done}
-            onChange={() => toggleTodo(index)}
-            style={{ transform: "scale(1.5)" }}
-          />
-          <Text as={todo.done ? "s" : undefined}>{todo.text}</Text>
-        </HStack>
+        <VStack align="start" spacing={1}>
+          <HStack spacing={3}>
+            <input
+              type="checkbox"
+              checked={todo.done}
+              onChange={() => toggleTodo(index)}
+              style={{ transform: "scale(1.5)" }}
+            />
+            <Text as={todo.done ? "s" : undefined}>{todo.text}</Text>
+          </HStack>
+          {todo.dueDate && (
+            <HStack>
+              <Text fontSize="sm" color="gray.300">
+                Due: {new Date(todo.dueDate).toLocaleDateString()}
+              </Text>
+              {isOverdue && (
+                <Badge colorScheme="red" fontSize="xs">
+                  Overdue
+                </Badge>
+              )}
+            </HStack>
+          )}
+        </VStack>
 
         <HStack spacing={2}>
           <Button size="sm" onClick={() => startEditing(index)}>
@@ -139,16 +165,21 @@ function App() {
 
           <FormControl mb={4}>
             <FormLabel>Add Todo</FormLabel>
-            <HStack>
+            <VStack align="stretch">
               <Input
                 placeholder="Enter a task"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
               />
+              <Input
+                type="date"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+              />
               <Button colorScheme="teal" onClick={addTodo}>
                 Add
               </Button>
-            </HStack>
+            </VStack>
           </FormControl>
 
           <VStack align="stretch" spacing={3}>
@@ -195,7 +226,6 @@ function App() {
           <ModalContent bg="gray.800" color="white" p={4}>
             <ModalBody>
               <VStack align="stretch" spacing={4}>
-                {/* Custom header row */}
                 <HStack>
                   <Text fontSize="lg" fontWeight="bold">
                     Edit Todo
@@ -219,6 +249,11 @@ function App() {
                       if (e.key === "Enter") updateTodoText();
                       if (e.key === "Escape") onClose();
                     }}
+                  />
+                  <Input
+                    type="date"
+                    value={editDueDate}
+                    onChange={(e) => setEditDueDate(e.target.value)}
                   />
                   <Button colorScheme="teal" onClick={updateTodoText}>
                     Save
