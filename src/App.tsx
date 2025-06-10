@@ -23,6 +23,7 @@ import {
 } from "@chakra-ui/react";
 import { useState, useEffect } from "react";
 import { CloseIcon } from "@chakra-ui/icons";
+import ModalComponent from "./Modal";
 
 const config: ThemeConfig = {
   initialColorMode: "dark",
@@ -44,11 +45,10 @@ function App() {
   });
   const [input, setInput] = useState("");
   const [dueDate, setDueDate] = useState("");
+  const { isOpen, onOpen, onClose } = useDisclosure();
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [editText, setEditText] = useState("");
   const [editDueDate, setEditDueDate] = useState("");
-
-  const { isOpen, onOpen, onClose } = useDisclosure();
 
   const addTodo = () => {
     if (!input.trim()) return;
@@ -65,20 +65,6 @@ function App() {
     setTodos((prev) =>
       prev.map((t, i) => (i === index ? { ...t, done: !t.done } : t))
     );
-  };
-
-  const updateTodoText = () => {
-    if (editingIndex !== null && editText.trim()) {
-      setTodos((prev) =>
-        prev.map((t, i) =>
-          i === editingIndex ? { ...t, text: editText, dueDate: editDueDate } : t
-        )
-      );
-    }
-    onClose();
-    setEditingIndex(null);
-    setEditText("");
-    setEditDueDate("");
   };
 
   const startEditing = (index: number) => {
@@ -220,57 +206,7 @@ function App() {
             )}
           </VStack>
         </Container>
-
-        <Modal isOpen={isOpen} onClose={onClose} isCentered>
-          <ModalOverlay />
-          <ModalContent bg="gray.800" color="white" p={4}>
-            <ModalBody>
-              <VStack align="stretch" spacing={4}>
-                <HStack>
-                  <Text fontSize="lg" fontWeight="bold">
-                    Edit Todo
-                  </Text>
-                  <Spacer />
-                  <IconButton
-                    aria-label="Close modal"
-                    icon={<CloseIcon />}
-                    size="sm"
-                    variant="ghost"
-                    color="white"
-                    _hover={{ bg: "gray.700" }}
-                    onClick={onClose}
-                  />
-                </HStack>
-                <HStack>
-                  <Input
-                    value={editText}
-                    onChange={(e) => setEditText(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") updateTodoText();
-                      if (e.key === "Escape") onClose();
-                    }}
-                  />
-                  <Input
-                    type="date"
-                    value={editDueDate}
-                    onChange={(e) => setEditDueDate(e.target.value)}
-                  />
-                  <Button colorScheme="teal" onClick={updateTodoText}>
-                    Save
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    color="white"
-                    _hover={{ bg: "gray.700" }}
-                    onClick={onClose}
-                  >
-                    Cancel
-                  </Button>
-                </HStack>
-              </VStack>
-            </ModalBody>
-          </ModalContent>
-        </Modal>
+        <ModalComponent/>
       </Box>
     </ChakraProvider>
   );
