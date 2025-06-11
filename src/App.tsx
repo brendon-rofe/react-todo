@@ -13,17 +13,12 @@ import {
   HStack,
   Text,
   IconButton,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalBody,
   useDisclosure,
-  Spacer,
   Badge,
 } from "@chakra-ui/react";
 import { useState, useEffect } from "react";
 import { CloseIcon } from "@chakra-ui/icons";
-import ModalComponent from "./EditModal";
+import EditModal from "./EditModal";
 
 const config: ThemeConfig = {
   initialColorMode: "dark",
@@ -35,7 +30,7 @@ const theme = extendTheme({ config });
 type Todo = {
   text: string;
   done: boolean;
-  dueDate?: string; // ISO date string
+  dueDate?: string;
 };
 
 function App() {
@@ -72,6 +67,18 @@ function App() {
     setEditText(todos[index].text);
     setEditDueDate(todos[index].dueDate || "");
     onOpen();
+  };
+
+  const updateTodo = () => {
+    if (editingIndex !== null && editText.trim()) {
+      setTodos((prev) =>
+        prev.map((t, i) =>
+          i === editingIndex ? { ...t, text: editText, dueDate: editDueDate } : t
+        )
+      );
+      onClose();
+      setEditingIndex(null);
+    }
   };
 
   useEffect(() => {
@@ -206,7 +213,19 @@ function App() {
             )}
           </VStack>
         </Container>
-        <ModalComponent/>
+
+        <EditModal
+          isOpen={isOpen}
+          onClose={() => {
+            setEditingIndex(null);
+            onClose();
+          }}
+          editText={editText}
+          setEditText={setEditText}
+          editDueDate={editDueDate}
+          setEditDueDate={setEditDueDate}
+          onSave={updateTodo}
+        />
       </Box>
     </ChakraProvider>
   );
