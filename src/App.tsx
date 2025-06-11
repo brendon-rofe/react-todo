@@ -23,7 +23,7 @@ import {
 } from "@chakra-ui/react";
 import { useState, useEffect } from "react";
 import { CloseIcon } from "@chakra-ui/icons";
-import ModalComponent from "./Modal";
+import ModalComponent from "./EditModal";
 
 const config: ThemeConfig = {
   initialColorMode: "dark",
